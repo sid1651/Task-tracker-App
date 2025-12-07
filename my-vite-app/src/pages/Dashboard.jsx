@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react"; // 🔥 added Suspense
 import API from "../api";
 import Navbar from "../components/Navbar";
-import TaskForm from "../components/TaskForm";
-import TaskList from "../components/TaskList";
+const TaskForm = React.lazy(() => import("../components/TaskForm"));
+const TaskList = React.lazy(() => import("../components/TaskList"));
 import { toast } from "react-toastify";
 
 export default function Dashboard({ logout }) {
@@ -87,7 +87,9 @@ export default function Dashboard({ logout }) {
           </div>
 
           {/* Task List */}
-          <TaskList tasks={tasks} onChange={fetchTasks} />
+          <Suspense fallback={<div>Loading tasks...</div>}>
+            <TaskList tasks={tasks} onChange={fetchTasks} />
+          </Suspense>
 
           {/* Pagination Controls */}
           <div
@@ -118,7 +120,9 @@ export default function Dashboard({ logout }) {
 
         {/* Task Form */}
         <div className="right-section">
-          <TaskForm onSaved={fetchTasks} />
+          <Suspense fallback={<div>Loading form...</div>}>
+            <TaskForm onSaved={fetchTasks} />
+          </Suspense>
         </div>
       </div>
     </div>
