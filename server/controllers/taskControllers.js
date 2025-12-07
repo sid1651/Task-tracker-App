@@ -1,17 +1,43 @@
 import Task from "../models/task.js";
 
 export async function getTasks(req, res) {
-  const userId = req.user.id;
-  const { q, status } = req.query;
-  const filter = { user: userId };
-  if (status) filter.status = status;
-  if (q) filter.$or = [
-    { title: new RegExp(q, "i") },
-    { description: new RegExp(q, "i") }
-  ];
-  const tasks = await Task.find(filter).sort({ createdAt: -1 });
-  res.json(tasks);
+  try {
+    const userId = req.user.id;
+    const { q, status, page = 1, limit = 10 } = req.query;
+
+    const filter = { user: userId };
+    if (status) filter.status = status;
+    if (q)
+      filter.$or = [
+        { title: new RegExp(q, "i") },
+        { description: new RegExp(q, "i") },
+      ];
+
+    // Convert page and limit to numbers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    // Fetch tasks with pagination
+    const tasks = await Task.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
+
+    // Get total count for frontend pagination
+    const total = await Task.countDocuments(filter);
+
+    res.json({
+      tasks,
+      total,
+      page: pageNumber,
+      pages: Math.ceil(total / limitNumber),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 }
+
 
 export async function createTask(req, res) {
   const userId = req.user.id;
