@@ -14,6 +14,7 @@ export default function Login({ setToken }) {
     try {
       const res = await API.post("/auth/login", { email, password });
       setToken(res.data.token);
+      localStorage.setItem("token", res.data.token);
       toast.success("Logged in");
       nav("/");
     } catch (err) {

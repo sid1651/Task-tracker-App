@@ -8,40 +8,42 @@ import { setAuthToken } from "./api";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// 🔥 import loader registration function
-// import { registerLoader } from "./loader";
 import Loader from "./components/Loder";
 import { registerLoader } from "./loderControl";
+    // import { registerLoader } from "./loaderControl";
 
 function App() {
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token")); // ✅ get token synchronously
   const [initializing, setInitializing] = useState(true);
 
+  // Set token in Axios immediately if exists
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      setToken(savedToken);
-      setAuthToken(savedToken);  // 🔥 Set token before any API calls
+    if (token) {
+      setAuthToken(token); // ✅ set header before API calls
     }
     setInitializing(false);
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     registerLoader(setLoading);
   }, []);
 
-  if (initializing) return null; // ⛔ Prevent Dashboard render before token is set
+  // Update localStorage whenever token changes
+  useEffect(() => {
+    if (token) localStorage.setItem("token", token);
+    else localStorage.removeItem("token");
+  }, [token]);
+
+  if (initializing) return null;
 
   return (
     <BrowserRouter>
       {loading && <Loader />}
       <ToastContainer />
-
       <Routes>
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/signup" element={<Signup setToken={setToken} />} />
-
         <Route
           path="/"
           element={
